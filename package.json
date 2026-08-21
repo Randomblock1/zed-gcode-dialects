@@ -6,7 +6,7 @@
   "author": "Benjamin Gonzalez",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Randomblock1/zed-gcode-suite.git"
+    "url": "https://github.com/Randomblock1/zed-gcode.git"
   },
   "main": "bindings/node",
   "types": "bindings/node",
@@ -39,13 +39,14 @@
     "test": "node scripts/test.mjs",
     "test:queries": "node scripts/check-queries.mjs",
     "parse:fixtures": "node scripts/test.mjs --fixtures-only",
+    "validate:corpora": "node scripts/validate-corpora.mjs",
     "format": "prettier --write grammar.js",
     "format:check": "prettier --check grammar.js",
     "queries:sync": "node scripts/sync-zed-queries.mjs",
     "zed:local": "node scripts/use-local-grammar.mjs",
     "zed:release": "node scripts/use-release-grammar.mjs"
   },
-  "allowScripts": {
-    "tree-sitter-cli@0.25.10": true
+  "pnpm": {
+    "onlyBuiltDependencies": ["tree-sitter-cli"]
   }
 }

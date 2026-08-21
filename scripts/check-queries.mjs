@@ -1,24 +1,25 @@
+import { readdirSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { root, runTreeSitter } from "./tree-sitter-cli.mjs";
+import { examplesDir, queriesDir } from "./paths.mjs";
+import { runTreeSitter } from "./tree-sitter-cli.mjs";
 
-const checks = [
-  ["highlights.scm", "rrf.g"],
-  ["highlights.scm", "klipper.cfg"],
-  ["brackets.scm", "klipper.cfg"],
-  ["indents.scm", "klipper.cfg"],
-  ["outline.scm", "klipper.cfg"],
-];
+// `tree-sitter query` validates query compilation against the grammar; the
+// fixture only gives it something to run over.
+const fixture = join(examplesDir, "klipper.cfg");
 
 export function checkQueries() {
-  for (const [query, fixture] of checks) {
-    runTreeSitter(
-      ["query", join(root, "queries", query), join(root, "examples", fixture)],
-      { stdio: "ignore" },
-    );
+  const queries = readdirSync(queriesDir).filter((name) =>
+    name.endsWith(".scm"),
+  );
+
+  for (const query of queries) {
+    runTreeSitter(["query", join(queriesDir, query), fixture, "--quiet"], {
+      stdio: "pipe",
+    });
   }
 
-  console.log(`Validated ${checks.length} query/fixture combinations.`);
+  console.log(`Validated ${queries.length} query files.`);
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

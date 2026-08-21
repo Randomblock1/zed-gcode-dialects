@@ -1,18 +1,40 @@
-import { readdirSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { checkQueries } from "./check-queries.mjs";
-import { root, runTreeSitter } from "./tree-sitter-cli.mjs";
+import { examplesDir, root } from "./paths.mjs";
+import { syncZedQueries } from "./sync-zed-queries.mjs";
+import { runTreeSitter } from "./tree-sitter-cli.mjs";
 
-const fixtures = readdirSync(join(root, "examples"), { withFileTypes: true })
+const fixturesOnly = process.argv.includes("--fixtures-only");
+const fixtures = readdirSync(examplesDir, { withFileTypes: true })
   .filter((entry) => entry.isFile())
-  .map((entry) => join(root, "examples", entry.name));
+  .map((entry) => join(examplesDir, entry.name));
 
-if (!process.argv.includes("--fixtures-only")) {
+if (!fixturesOnly) {
+  const parserPath = join(root, "src", "parser.c");
+  const parserBefore = readFileSync(parserPath, "utf8");
+  runTreeSitter(["generate"]);
+  if (readFileSync(parserPath, "utf8") !== parserBefore) {
+    console.warn(
+      "Warning: src/ was out of date with grammar.js and has been " +
+        "regenerated; commit the updated files.",
+    );
+  }
+
   runTreeSitter(["test"]);
 }
 
 runTreeSitter(["parse", ...fixtures, "--quiet"]);
 
-if (!process.argv.includes("--fixtures-only")) {
+if (!fixturesOnly) {
   checkQueries();
+  syncZedQueries({ check: true });
+
+  const manifest = readFileSync(join(root, "extension.toml"), "utf8");
+  if (manifest.includes('repository = "file://')) {
+    console.warn(
+      "Warning: extension.toml points the grammar at a local path; run " +
+        '"npm run zed:release" before committing it.',
+    );
+  }
 }
