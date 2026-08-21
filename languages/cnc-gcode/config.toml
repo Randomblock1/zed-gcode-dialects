@@ -1,5 +1,5 @@
 name = "CNC G-code"
-grammar = "practical_gcode"
+grammar = "gcode"
 path_suffixes = ["nc", "ngc", "tap", "cnc", "ncc", "din", "mpf", "spf"]
 line_comments = ["; "]
 tab_size = 2

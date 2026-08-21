@@ -1,20 +1,21 @@
 import { copyFileSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { languagesDir, queriesDir } from "./paths.mjs";
+import { languagesDir, requireGrammarDir } from "./paths.mjs";
 
-// Zed's query loader has no folds query; the root copy stays for other
-// tree-sitter consumers but is not propagated to the language directories.
+// Zed's query loader has no folds query; the grammar repository keeps its
+// folds.scm for other tree-sitter consumers, but it is not propagated to the
+// language directories.
 const ZED_UNSUPPORTED = new Set(["folds.scm"]);
 
-const languages = readdirSync(languagesDir, { withFileTypes: true })
-  .filter((entry) => entry.isDirectory())
-  .map((entry) => entry.name);
-const queries = readdirSync(queriesDir).filter(
-  (name) => name.endsWith(".scm") && !ZED_UNSUPPORTED.has(name),
-);
-
 export function syncZedQueries({ check = false } = {}) {
+  const queriesDir = join(requireGrammarDir(), "queries");
+  const languages = readdirSync(languagesDir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name);
+  const queries = readdirSync(queriesDir).filter(
+    (name) => name.endsWith(".scm") && !ZED_UNSUPPORTED.has(name),
+  );
   const stale = [];
 
   for (const language of languages) {
@@ -37,7 +38,7 @@ export function syncZedQueries({ check = false } = {}) {
 
   if (stale.length > 0) {
     throw new Error(
-      `Stale Zed query copies (run "npm run queries:sync"):\n  ${stale.join("\n  ")}`,
+      `Stale Zed query copies (run "node scripts/sync-zed-queries.mjs"):\n  ${stale.join("\n  ")}`,
     );
   }
 }

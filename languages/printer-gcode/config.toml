@@ -1,5 +1,5 @@
 name = "3D Printer G-code"
-grammar = "practical_gcode"
+grammar = "gcode"
 path_suffixes = ["gcode", "gco", "gc"]
 line_comments = ["; "]
 tab_size = 2

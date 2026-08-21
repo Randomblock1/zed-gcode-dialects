@@ -1,5 +1,5 @@
 name = "Klipper G-code Config"
-grammar = "practical_gcode"
+grammar = "gcode"
 path_suffixes = ["klipper.cfg"]
 # Zed applies this to the first line only, so it can only catch configs that
 # open with a section header; comment-headed files need manual selection or a

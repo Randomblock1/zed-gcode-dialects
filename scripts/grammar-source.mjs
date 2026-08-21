@@ -2,39 +2,23 @@ import { execFileSync } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { root } from "./paths.mjs";
+import { requireGrammarDir, root } from "./paths.mjs";
 
 const manifestPath = join(root, "extension.toml");
-const marker = "[grammars.practical_gcode]";
-// The files Zed builds the grammar from at the pinned rev; the pin must be the
-// last commit that touched any of them.
-const grammarPaths = [
-  "grammar.js",
-  "src",
-  "bindings",
-  "binding.gyp",
-  "package.json",
-  "tree-sitter.json",
-];
+const marker = "[grammars.gcode]";
 
-function git(...args) {
-  return execFileSync("git", args, {
-    cwd: root,
-    encoding: "utf8",
-    timeout: 15000,
-  });
+function git(cwd, ...args) {
+  return execFileSync("git", args, { cwd, encoding: "utf8", timeout: 15000 });
 }
 
 function grammarRev() {
-  const rev = git("log", "-1", "--format=%H", "--", ...grammarPaths).trim();
-  if (!rev) {
-    throw new Error("No commit touching the grammar files was found");
-  }
-  const dirty = git("status", "--porcelain", "--", ...grammarPaths).trim();
+  const grammarDir = requireGrammarDir();
+  const rev = git(grammarDir, "rev-parse", "HEAD").trim();
+  const dirty = git(grammarDir, "status", "--porcelain").trim();
   if (dirty) {
     console.warn(
-      "Warning: the grammar has uncommitted changes. Zed builds the pinned " +
-        "commit, not the working tree — commit these and rerun:",
+      "Warning: the grammar checkout has uncommitted changes. Zed builds " +
+        "the pinned commit, not the working tree — commit these and rerun:",
     );
     for (const line of dirty.split("\n")) {
       console.warn(`  ${line}`);
@@ -94,8 +78,8 @@ export function setGrammarSource(repository, { checkRemote = false } = {}) {
   if (checkRemote && !remoteHasRev(repository, rev)) {
     console.warn(
       `Warning: could not fetch ${rev} from ${repository}. ` +
-        "Push the repository (including that commit) before publishing, " +
-        "or Zed will fail to build the grammar.",
+        "Push the grammar repository (including that commit) before " +
+        "publishing, or Zed will fail to build the grammar.",
     );
   }
 }

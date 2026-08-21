@@ -1,11 +1,11 @@
-id = "practical-gcode"
-name = "Practical G-code"
+id = "gcode"
+name = "G-code"
 version = "0.1.0"
 schema_version = 1
 authors = ["Benjamin Gonzalez"]
 description = "High-quality syntax support for Marlin/RepRap, RepRapFirmware, Klipper macros, and CNC G-code."
 repository = "https://github.com/Randomblock1/zed-gcode"
 
-[grammars.practical_gcode]
-repository = "https://github.com/Randomblock1/zed-gcode"
-rev = "3836176271c352d1c5e1c49d828dc422e8339eba"
+[grammars.gcode]
+repository = "https://github.com/Randomblock1/tree-sitter-gcode"
+rev = "8099c9e27b81e497579eab90937449e94ad2bbdd"

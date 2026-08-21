@@ -1,5 +1,5 @@
 name = "RepRapFirmware G-code"
-grammar = "practical_gcode"
+grammar = "gcode"
 path_suffixes = ["g", "rrf", "rrfg"]
 line_comments = ["; "]
 tab_size = 2
