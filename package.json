@@ -36,10 +36,16 @@
   },
   "scripts": {
     "generate": "tree-sitter generate",
-    "test": "tree-sitter test",
-    "parse:fixtures": "tree-sitter parse examples/* --quiet",
+    "test": "node scripts/test.mjs",
+    "test:queries": "node scripts/check-queries.mjs",
+    "parse:fixtures": "node scripts/test.mjs --fixtures-only",
     "format": "prettier --write grammar.js",
-    "format:check": "prettier --check grammar.js"
+    "format:check": "prettier --check grammar.js",
+    "queries:sync": "node scripts/sync-zed-queries.mjs",
+    "zed:local": "node scripts/use-local-grammar.mjs",
+    "zed:release": "node scripts/use-release-grammar.mjs"
+  },
+  "allowScripts": {
+    "tree-sitter-cli@0.25.10": true
   }
 }
-

@@ -1,0 +1,11 @@
+id = "practical-gcode"
+name = "Practical G-code"
+version = "0.1.0"
+schema_version = 1
+authors = ["Benjamin Gonzalez"]
+description = "High-quality syntax support for Marlin/RepRap, RepRapFirmware, Klipper macros, and CNC G-code."
+repository = "https://github.com/Randomblock1/zed-gcode-suite"
+
+[grammars.practical_gcode]
+repository = "https://github.com/Randomblock1/zed-gcode-suite"
+rev = "7997e7dbc212ced45b49c7e0711c451c26676846"

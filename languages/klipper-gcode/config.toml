@@ -1,0 +1,8 @@
+name = "Klipper G-code Config"
+grammar = "practical_gcode"
+path_suffixes = ["klipper.cfg"]
+first_line_pattern = '^\s*\[(printer|include|gcode_macro|delayed_gcode)(\s|\])'
+line_comments = ["# "]
+tab_size = 2
+hard_tabs = false
+
