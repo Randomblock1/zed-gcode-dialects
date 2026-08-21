@@ -17,6 +17,7 @@
   (rrf_declaration_keyword)
   (rrf_set_keyword)
   (rrf_control_keyword)
+  (rrf_else_keyword)
   (rrf_output_keyword)
 ] @keyword
 
@@ -98,6 +99,7 @@
   "~"
   "*"
   "/"
+  "//"
   "%"
   "mod"
   "MOD"
@@ -125,4 +127,3 @@
   "{#"
   "#}"
 ] @punctuation.bracket
-

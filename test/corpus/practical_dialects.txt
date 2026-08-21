@@ -8,6 +8,8 @@ if !sensors.endstops[global.ENDSTOP_AXIS].triggered
   set global.LAST_ERROR_CODE = 505
   echo {"ABORT - " ^ global.LAST_ERROR}
   abort global.LAST_ERROR
+else
+  echo "measurement ok"
 set global.WIDTH = abs(move.axes[global.ENDSTOP_AXIS].machinePosition - var.nearEdge)
 
 ---
@@ -83,6 +85,12 @@ set global.WIDTH = abs(move.axes[global.ENDSTOP_AXIS].machinePosition - var.near
       (identifier)
       (member_access
         (identifier))))
+  (rrf_else
+    (rrf_else_keyword))
+  (rrf_output
+    (rrf_output_keyword)
+    (string
+      (double_quoted_string)))
   (rrf_assignment
     (rrf_set_keyword)
     (reference_expression

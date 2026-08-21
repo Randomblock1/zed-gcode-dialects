@@ -181,7 +181,7 @@
         ]
       },
       "operator": {
-        "multiple": false,
+        "multiple": true,
         "required": true,
         "types": [
           {
@@ -214,6 +214,10 @@
           },
           {
             "type": "/",
+            "named": false
+          },
+          {
+            "type": "//",
             "named": false
           },
           {
@@ -333,6 +337,10 @@
             "named": false
           },
           {
+            "type": "not",
+            "named": false
+          },
+          {
             "type": "or",
             "named": false
           },
@@ -382,6 +390,10 @@
       "types": [
         {
           "type": "_expression",
+          "named": true
+        },
+        {
+          "type": "dict_entry",
           "named": true
         }
       ]
@@ -469,6 +481,32 @@
           "named": true
         }
       ]
+    }
+  },
+  {
+    "type": "dict_entry",
+    "named": true,
+    "fields": {
+      "key": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "_expression",
+            "named": true
+          }
+        ]
+      },
+      "value": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "_expression",
+            "named": true
+          }
+        ]
+      }
     }
   },
   {
@@ -1154,6 +1192,37 @@
     "fields": {}
   },
   {
+    "type": "rrf_else",
+    "named": true,
+    "fields": {
+      "keyword": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "rrf_else_keyword",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "semicolon_comment",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "rrf_else_keyword",
+    "named": true,
+    "fields": {}
+  },
+  {
     "type": "rrf_output",
     "named": true,
     "fields": {
@@ -1259,6 +1328,10 @@
         },
         {
           "type": "rrf_declaration",
+          "named": true
+        },
+        {
+          "type": "rrf_else",
           "named": true
         },
         {
@@ -1434,6 +1507,10 @@
   },
   {
     "type": "/",
+    "named": false
+  },
+  {
+    "type": "//",
     "named": false
   },
   {

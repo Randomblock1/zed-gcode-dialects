@@ -41,6 +41,7 @@ module.exports = grammar({
           $.rrf_declaration,
           $.rrf_assignment,
           $.rrf_control,
+          $.rrf_else,
           $.rrf_output,
           $.o_statement,
           $.program_line,
@@ -110,6 +111,13 @@ module.exports = grammar({
         $._newline,
       ))),
 
+    rrf_else: ($) =>
+      prec(10, prec.right(seq(
+        field("keyword", $.rrf_else_keyword),
+        optional($.semicolon_comment),
+        $._newline,
+      ))),
+
     rrf_output: ($) =>
       prec(10, prec.right(seq(
         field("keyword", $.rrf_output_keyword),
@@ -121,6 +129,7 @@ module.exports = grammar({
     rrf_declaration_keyword: (_) => choice("var", "global"),
     rrf_set_keyword: (_) => "set",
     rrf_control_keyword: (_) => choice("if", "elif", "while"),
+    rrf_else_keyword: (_) => "else",
     rrf_output_keyword: (_) => choice("echo", "abort"),
 
     o_statement: ($) =>
@@ -264,8 +273,9 @@ module.exports = grammar({
         $.filter_expression,
       ),
 
-    brace_expression: ($) => seq("{", optional(commaSep1($._expression)), "}"),
+    brace_expression: ($) => seq("{", optional(commaSep1(choice($._expression, $.dict_entry))), "}"),
     bracket_expression: ($) => seq("[", optional(commaSep1($._expression)), "]"),
+    dict_entry: ($) => seq(field("key", $._expression), ":", field("value", $._expression)),
     parenthesized_expression: ($) => seq("(", $._expression, ")"),
     tuple_expression: ($) => seq("(", $._expression, ",", optional(commaSep1($._expression)), ")"),
 
@@ -306,9 +316,11 @@ module.exports = grammar({
         ...binaryLeft(PREC.OR, ["or", "OR", "||"], $),
         ...binaryLeft(PREC.AND, ["and", "AND", "xor", "XOR", "&&"], $),
         ...binaryLeft(PREC.COMPARE, ["==", "!=", "<>", "<=", ">=", "<", ">", "eq", "EQ", "ne", "NE", "lt", "LT", "le", "LE", "gt", "GT", "ge", "GE", "in", "IN", "is", "IS"], $),
+        prec.left(PREC.COMPARE, seq(field("left", $._expression), field("operator", seq("not", "in")), field("right", $._expression))),
+        prec.left(PREC.COMPARE, seq(field("left", $._expression), field("operator", seq("is", "not")), field("right", $._expression))),
         ...binaryLeft(PREC.CONCAT, ["^", "~"], $),
         ...binaryLeft(PREC.ADD, ["+", "-"], $),
-        ...binaryLeft(PREC.MULTIPLY, ["*", "/", "%", "mod", "MOD"], $),
+        ...binaryLeft(PREC.MULTIPLY, ["*", "/", "//", "%", "mod", "MOD"], $),
         prec.right(PREC.POWER, seq(field("left", $._expression), field("operator", "**"), field("right", $._expression))),
       ),
 
