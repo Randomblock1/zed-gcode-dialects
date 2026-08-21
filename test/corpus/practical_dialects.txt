@@ -152,7 +152,7 @@ gcode:
     (klipper_option_text))
   (klipper_option
     (option_name)
-    (klipper_option_text))
+    (number))
   (klipper_option
     (option_name)
     (klipper_option_text))
@@ -302,21 +302,22 @@ M30
   (o_statement
     (o_label)
     (o_keyword))
-  (program_line
-    (parameter_word)
-    (bare_argument)
+  (o_statement
+    (o_label)
+    (o_keyword)
     (bracket_expression
       (binary_expression
         (parameter_reference)
+        (text_comparison_operator)
         (number))))
   (program_line
     (g_code)
     (expression_word
       (parameter_reference_word))
     (feed_word))
-  (program_line
-    (parameter_word)
-    (bare_argument))
+  (o_statement
+    (o_label)
+    (o_keyword))
   (o_statement
     (o_label)
     (o_keyword))
@@ -381,3 +382,270 @@ M117 {params.VALUE|default("n/a")}
         (argument_list
           (string
             (double_quoted_string)))))))
+
+==================
+Compact and checksummed command lines
+==================
+
+N10G01X1.Y1.F100.
+G1X10Y20E0.5
+G28XY
+N234 G1 X-5 Y+2 *64
+G1 X5 ; rapid to start
+M117 Layer 2 of 30
+T1
+M23 PRINT1A.GCO
+
+---
+
+(source_file
+  (program_line
+    (line_number)
+    (g_code)
+    (axis_word)
+    (axis_word)
+    (feed_word))
+  (program_line
+    (g_code)
+    (axis_word)
+    (axis_word)
+    (axis_word))
+  (program_line
+    (g_code)
+    (bare_argument))
+  (program_line
+    (line_number)
+    (g_code)
+    (axis_word)
+    (axis_word)
+    (checksum))
+  (program_line
+    (g_code)
+    (axis_word)
+    (semicolon_comment))
+  (program_line
+    (m_code)
+    (bare_argument)
+    (number)
+    (bare_argument)
+    (number))
+  (program_line
+    (tool_code))
+  (program_line
+    (m_code)
+    (bare_argument)
+    (bare_argument)))
+
+==================
+Klipper includes, glyphs, and extended commands
+==================
+
+[include KAMP/*.cfg]
+[include ~/printer_data/config/*.cfg]
+[display_glyph fan]
+data:
+  ****............
+  .....*****......
+SAVE_GCODE_STATE NAME=clean_state
+SET_HEATER_TEMPERATURE HEATER=extruder TARGET=100 ; heat
+SET_PIN PIN=my_pin VALUE=1 # toggle
+gcode: {# inline note #} G28
+
+---
+
+(source_file
+  (klipper_section
+    (section_start)
+    (section_name))
+  (klipper_section
+    (section_start)
+    (section_name))
+  (klipper_section
+    (section_start)
+    (section_name))
+  (klipper_option
+    (option_name))
+  (klipper_glyph_line
+    (glyph_pixels))
+  (klipper_glyph_line
+    (glyph_pixels))
+  (program_line
+    (extended_command)
+    (named_argument
+      (argument_name)
+      (identifier)))
+  (program_line
+    (extended_command)
+    (named_argument
+      (argument_name)
+      (identifier))
+    (named_argument
+      (argument_name)
+      (number))
+    (semicolon_comment))
+  (program_line
+    (extended_command)
+    (named_argument
+      (argument_name)
+      (identifier))
+    (named_argument
+      (argument_name)
+      (number))
+    (hash_comment))
+  (klipper_option
+    (option_name)
+    (jinja_comment_inline)
+    (bare_argument)))
+
+==================
+Jinja statements comments and whitespace control
+==================
+
+{%- if params.X is not defined -%}
+{% for k, v in d.items() %}
+{# a # note #}
+{% set flag = namespace(found=false) %}
+{% endfor %}
+{%- endif %}
+
+---
+
+(source_file
+  (program_line
+    (jinja_statement_inline
+      (jinja_directive
+        (binary_expression
+          (reference_expression
+            (identifier)
+            (member_access
+              (identifier)))
+          (is_not_operator)
+          (identifier)))))
+  (program_line
+    (jinja_statement_inline
+      (jinja_directive
+        (identifier)
+        (identifier)
+        (call_expression
+          (reference_expression
+            (identifier)
+            (member_access
+              (identifier)))
+          (argument_list)))))
+  (program_line
+    (jinja_comment_inline))
+  (program_line
+    (jinja_statement_inline
+      (jinja_directive
+        (identifier)
+        (call_expression
+          (identifier)
+          (argument_list
+            (keyword_argument
+              (identifier)
+              (boolean)))))))
+  (program_line
+    (jinja_statement_inline
+      (jinja_directive)))
+  (program_line
+    (jinja_statement_inline
+      (jinja_directive))))
+
+==================
+RRF control flow loops and literals
+==================
+
+if move.axes[0].homed
+  echo "homed"
+elif sensors.gpIn[1].value < 100
+  M291 P"probe" S1
+else
+  break
+while iterations < 5
+  continue
+var list = {1, 2, 3}
+var pair = (1, 2)
+var flag = true
+var nothing = null
+if "x" Not In global.names
+  abort "missing"
+
+---
+
+(source_file
+  (rrf_control
+    (rrf_control_keyword)
+    (reference_expression
+      (identifier)
+      (member_access
+        (identifier))
+      (subscript_access
+        (number))
+      (member_access
+        (identifier))))
+  (rrf_output
+    (rrf_output_keyword)
+    (string
+      (double_quoted_string)))
+  (rrf_control
+    (rrf_control_keyword)
+    (binary_expression
+      (reference_expression
+        (identifier)
+        (member_access
+          (identifier))
+        (subscript_access
+          (number))
+        (member_access
+          (identifier)))
+      (number)))
+  (program_line
+    (m_code)
+    (quoted_word)
+    (spindle_word))
+  (rrf_else
+    (rrf_else_keyword))
+  (rrf_loop_control
+    (rrf_loop_control_keyword))
+  (rrf_control
+    (rrf_control_keyword)
+    (binary_expression
+      (identifier)
+      (number)))
+  (rrf_loop_control
+    (rrf_loop_control_keyword))
+  (rrf_declaration
+    (rrf_declaration_keyword)
+    (identifier)
+    (brace_expression
+      (number)
+      (number)
+      (number)))
+  (rrf_declaration
+    (rrf_declaration_keyword)
+    (identifier)
+    (tuple_expression
+      (number)
+      (number)))
+  (rrf_declaration
+    (rrf_declaration_keyword)
+    (identifier)
+    (boolean))
+  (rrf_declaration
+    (rrf_declaration_keyword)
+    (identifier)
+    (null))
+  (rrf_control
+    (rrf_control_keyword)
+    (binary_expression
+      (string
+        (double_quoted_string))
+      (not_in_operator)
+      (reference_expression
+        (identifier)
+        (member_access
+          (identifier)))))
+  (rrf_output
+    (rrf_output_keyword)
+    (string
+      (double_quoted_string))))

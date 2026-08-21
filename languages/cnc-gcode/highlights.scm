@@ -30,6 +30,7 @@
 (section_start) @tag
 (section_name) @type
 (option_name) @property
+(klipper_option_text) @string
 
 ; G-code operands
 (line_number) @comment.doc
@@ -42,7 +43,6 @@
 (argument_name) @property
 (parameter_reference) @variable.special
 (spaced_parameter_reference) @variable.special
-(parameter_reference_word) @variable.special
 (quoted_word) @string
 
 ; Expressions
@@ -60,59 +60,17 @@
 (call_expression function: (identifier) @function)
 (call_expression function: (reference_expression) @function)
 (filter_expression filter: (identifier) @function)
-[
-  (not_in_operator)
-  (is_not_operator)
-  (text_comparison_operator)
-  (not_operator)
-] @operator
+
+; The grammar tags every expression operator with an `operator` field, so one
+; field pattern per expression kind replaces enumerating the literals.
+(binary_expression operator: _ @operator)
+(unary_expression operator: _ @operator)
+(multiline_string_expression operator: _ @operator)
+(jinja_directive "in" @operator)
+(percent_line "%" @operator)
 
 [
   "="
-  "!"
-  "-"
-  "+"
-  "#"
-  "or"
-  "OR"
-  "||"
-  "and"
-  "AND"
-  "xor"
-  "XOR"
-  "&&"
-  "=="
-  "!="
-  "<>"
-  "<="
-  ">="
-  "<"
-  ">"
-  "eq"
-  "EQ"
-  "ne"
-  "NE"
-  "lt"
-  "LT"
-  "le"
-  "LE"
-  "gt"
-  "GT"
-  "ge"
-  "GE"
-  "in"
-  "IN"
-  "is"
-  "IS"
-  "^"
-  "~"
-  "*"
-  "/"
-  "//"
-  "%"
-  "mod"
-  "MOD"
-  "**"
   "?"
   "|"
 ] @operator
@@ -132,7 +90,7 @@
   "{"
   "}"
   "{%"
+  "{%-"
   "%}"
-  "{#"
-  "#}"
+  "-%}"
 ] @punctuation.bracket

@@ -17,6 +17,11 @@ const PREC = {
   POSTFIX: 10,
 };
 
+// No scientific exponent: E is the extruder axis, so X10E5 must lex as two
+// words (X10, E5), and LinuxCNC rejects exponents in words outright.
+const DECIMAL = String.raw`[-+]?(?:\d+(?:\.\d*)?|\.\d+)`;
+const CODE_NUMBER = String.raw`[-+]?\d+(?:\.\d+)?`;
+
 module.exports = grammar({
   name: "practical_gcode",
 
@@ -26,10 +31,7 @@ module.exports = grammar({
 
   supertypes: ($) => [$._expression, $._program_item],
 
-  conflicts: ($) => [
-    [$._expression, $.multiline_string_expression],
-    [$._expression, $.keyword_argument],
-  ],
+  conflicts: ($) => [[$._expression, $.multiline_string_expression]],
 
   rules: {
     source_file: ($) =>
@@ -41,7 +43,6 @@ module.exports = grammar({
           $.percent_line,
           $.klipper_section,
           $.klipper_option,
-          $.klipper_alias_line,
           $.klipper_glyph_line,
           $.rrf_declaration,
           $.rrf_assignment,
@@ -56,151 +57,87 @@ module.exports = grammar({
 
     _newline: (_) => /\r?\n/,
 
-    semicolon_comment: (_) => token(/;[^\r\n]*/),
-    hash_comment: (_) =>
-      choice(
-        token("#"),
-        token(/#{3,}[^\r\n]*/),
-        token(/#[^0-9<#\r\n][^\r\n]*/),
-      ),
+    semicolon_comment: (_) => /;[^\r\n]*/,
+    hash_comment: (_) => choice("#", /#{3,}[^\r\n]*/, /#[^0-9<#\r\n][^\r\n]*/),
     parenthesized_comment: (_) => token(prec(-1, /\([^()\r\n]*\)/)),
-    comment_text: (_) => token(prec(-1, /[^#\r\n](?:[^\r\n]*[^#\r\n])?/)),
 
     percent_line: ($) =>
       prec.right(seq("%", optional($.semicolon_comment), $._newline)),
 
     klipper_section: ($) =>
-      prec(
+      prec.right(
         5,
-        prec.right(
-          seq(
-            field("kind", $.section_start),
-            optional(field("name", $.section_name)),
-            "]",
-            optional($.hash_comment),
-            $._newline,
-          ),
+        seq(
+          field("kind", $.section_start),
+          optional(field("name", $.section_name)),
+          "]",
+          optional($.hash_comment),
+          $._newline,
         ),
       ),
-    section_start: (_) => token(/\[[A-Za-z_][A-Za-z0-9_-]*/),
-    section_name: (_) => token(/[A-Za-z0-9_.-]+(?:[ \t]+[A-Za-z0-9_.-]+)*/),
+    section_start: (_) => /\[[A-Za-z_][A-Za-z0-9_-]*/,
+    section_name: (_) => /[A-Za-z0-9_.~*\/-]+(?:[ \t]+[A-Za-z0-9_.~*\/-]+)*/,
 
     klipper_option: ($) =>
-      prec(
+      prec.right(
         3,
-        prec.right(
-          seq(
-            field("name", $.option_name),
-            choice(
-              repeat1(
-                choice(
-                  $._template_item,
-                  $.bare_argument,
-                  $.string,
-                  $.number,
-                  $.comma,
-                  $.colon,
-                ),
+        seq(
+          field("name", $.option_name),
+          choice(
+            repeat1(
+              choice(
+                $._template_item,
+                $.bare_argument,
+                $.string,
+                $.number,
+                $.comma,
+                $.colon,
               ),
-              optional($.klipper_option_text),
             ),
-            optional($.klipper_inline_comment),
-            $._newline,
+            optional($.klipper_option_text),
           ),
+          optional($.klipper_inline_comment),
+          $._newline,
         ),
       ),
     option_name: (_) => token(prec(10, /[A-Za-z_][A-Za-z0-9_]*(?::|[ \t]*=)/)),
-    klipper_option_text: (_) => token(prec(1, /[^#\r\n]+/)),
-    klipper_inline_comment: (_) => token(/#[^\r\n]*/),
-    klipper_alias_line: ($) =>
-      seq(
-        repeat1($.klipper_alias),
-        optional($.klipper_inline_comment),
-        $._newline,
-      ),
-    klipper_alias: (_) =>
-      token(/[A-Za-z_][A-Za-z0-9_]*[ \t]*=[ \t]*[^,\s#]+[ \t]*,?/),
+    klipper_option_text: (_) => token(prec(-1, /[^#\r\n]+/)),
+    klipper_inline_comment: (_) => /#[^\r\n]*/,
     klipper_glyph_line: ($) => seq($.glyph_pixels, $._newline),
-    glyph_pixels: (_) => token(/[.*]{16}/),
+    // Minimum 5: hd44780 glyph rows are 5 wide, ST7920 rows 16 — while a
+    // shorter dot run at line start ("... loading") is prose, not pixels.
+    glyph_pixels: (_) => /[.*]{5}[.*]*/,
 
     rrf_declaration: ($) =>
-      prec(
-        10,
-        prec.right(
-          seq(
-            field("keyword", $.rrf_declaration_keyword),
-            field("name", $.identifier),
-            "=",
-            field("value", $._expression),
-            optional($.semicolon_comment),
-            $._newline,
-          ),
-        ),
+      rrfLine(
+        $,
+        $.rrf_declaration_keyword,
+        field("name", $.identifier),
+        "=",
+        field("value", $._expression),
       ),
 
     rrf_assignment: ($) =>
-      prec(
-        10,
-        prec.right(
-          seq(
-            field("keyword", $.rrf_set_keyword),
-            field("target", $._assignable),
-            "=",
-            field("value", $._expression),
-            optional($.semicolon_comment),
-            $._newline,
-          ),
-        ),
+      rrfLine(
+        $,
+        $.rrf_set_keyword,
+        field("target", $._assignable),
+        "=",
+        field("value", $._expression),
       ),
 
     rrf_control: ($) =>
-      prec(
-        10,
-        prec.right(
-          seq(
-            field("keyword", $.rrf_control_keyword),
-            field("condition", $._expression),
-            optional($.semicolon_comment),
-            $._newline,
-          ),
-        ),
-      ),
+      rrfLine($, $.rrf_control_keyword, field("condition", $._expression)),
 
-    rrf_else: ($) =>
-      prec(
-        10,
-        prec.right(
-          seq(
-            field("keyword", $.rrf_else_keyword),
-            optional($.semicolon_comment),
-            $._newline,
-          ),
-        ),
-      ),
+    rrf_else: ($) => rrfLine($, $.rrf_else_keyword),
 
-    rrf_loop_control: ($) =>
-      prec(
-        10,
-        prec.right(
-          seq(
-            field("keyword", $.rrf_loop_control_keyword),
-            optional($.semicolon_comment),
-            $._newline,
-          ),
-        ),
-      ),
+    rrf_loop_control: ($) => rrfLine($, $.rrf_loop_control_keyword),
 
     rrf_output: ($) =>
-      prec(
-        10,
-        prec.right(
-          seq(
-            field("keyword", $.rrf_output_keyword),
-            repeat(choice($._expression, $.bare_argument, $.comma)),
-            optional($.semicolon_comment),
-            $._newline,
-          ),
-        ),
+      rrfLine(
+        $,
+        $.rrf_output_keyword,
+        repeat(choice($._expression, $.bare_argument, $.comma)),
       ),
 
     rrf_declaration_keyword: (_) => choice("var", "global"),
@@ -214,7 +151,7 @@ module.exports = grammar({
       prec.right(
         seq(
           field("label", $.o_label),
-          field("keyword", $.o_keyword),
+          optional(field("keyword", $.o_keyword)),
           repeat(
             choice(
               $.bracket_expression,
@@ -228,7 +165,7 @@ module.exports = grammar({
           $._newline,
         ),
       ),
-    o_label: (_) => token(/[oO](?:\d+(?:\.\d+)?|<[^>\r\n]+>)/),
+    o_label: (_) => token(prec(9, /[oO](?:\d+(?:\.\d+)?|<[^>\r\n]+>)/)),
     o_keyword: (_) =>
       token(
         caseInsensitiveWords([
@@ -267,14 +204,18 @@ module.exports = grammar({
 
     block_delete: (_) => "/",
     line_number: (_) => token(prec(8, /[Nn]\d+(?:\.\d+)?/)),
-    checksum: (_) => token(/\*\d+/),
+    checksum: (_) => /\*\d+/,
 
     _command: ($) =>
       choice($.g_code, $.m_code, $.tool_code, $.extended_command),
-    g_code: (_) => token(prec(8, /[Gg][-+]?\d+(?:\.\d+)?/)),
-    m_code: (_) => token(prec(8, /[Mm][-+]?\d+(?:\.\d+)?/)),
-    tool_code: (_) => token(prec(8, /[Tt][-+]?\d+(?:\.\d+)?/)),
-    extended_command: (_) => token(prec(-1, /[A-Za-z_][A-Za-z0-9_]+/)),
+    g_code: (_) => codeWord("Gg"),
+    m_code: (_) => codeWord("Mm"),
+    tool_code: (_) => codeWord("Tt"),
+    // A digit run may not be followed directly by a letter: that boundary is
+    // where compact G-code splits (G1X10 is G1 + X10, SET_TMC2209_FIELD is
+    // one command). Equal-length matches then let the prec-8 code words win.
+    extended_command: (_) =>
+      token(prec(-1, /[A-Za-z_](?:[A-Za-z_]|\d+_)*(?:[A-Za-z_]|\d+)/)),
 
     _program_item: ($) =>
       choice(
@@ -300,19 +241,10 @@ module.exports = grammar({
         $.bare_argument,
       ),
 
-    axis_word: (_) =>
-      token(
-        prec(
-          7,
-          /[XYZABCUVWExyzabcuvwe][-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?/,
-        ),
-      ),
-    feed_word: (_) =>
-      token(prec(7, /[Ff][-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?/)),
-    spindle_word: (_) =>
-      token(prec(7, /[Ss][-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?/)),
-    parameter_word: (_) =>
-      token(prec(6, /[A-Za-z][-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?/)),
+    axis_word: (_) => letterWord("XYZABCUVWExyzabcuvwe", 7),
+    feed_word: (_) => letterWord("Ff", 7),
+    spindle_word: (_) => letterWord("Ss", 7),
+    parameter_word: (_) => letterWord("A-Za-z", 6),
     expression_word: ($) =>
       choice(
         seq(
@@ -327,23 +259,20 @@ module.exports = grammar({
         ),
         $.parameter_reference_word,
       ),
-    brace_word_start: (_) => token(/[A-Za-z]\{/),
-    bracket_word_start: (_) => token(/[A-Za-z]\[/),
-    parameter_reference_word: (_) => token(/[A-Za-z]#+(?:\d+|<[^>\r\n]+>)/),
+    brace_word_start: (_) => /[A-Za-z]\{/,
+    bracket_word_start: (_) => /[A-Za-z]\[/,
+    parameter_reference_word: (_) => /[A-Za-z]#+(?:\d+|<[^>\r\n]+>)/,
     quoted_word: (_) =>
-      choice(
-        token(/[A-Za-z]"(?:[^"\\\r\n]|\\.)*"/),
-        token(/[A-Za-z]'(?:[^'\\\r\n]|\\.)*'/),
-      ),
+      choice(/[A-Za-z]"(?:[^"\\\r\n]|\\.)*"/, /[A-Za-z]'(?:[^'\\\r\n]|\\.)*'/),
 
     named_argument: ($) =>
-      prec.left(
+      prec.right(
         seq(
           field("name", $.argument_name),
           optional(field("value", choice($._expression, $.bare_argument))),
         ),
       ),
-    argument_name: (_) => token(/[A-Za-z_][A-Za-z0-9_]*=/),
+    argument_name: (_) => /[A-Za-z_][A-Za-z0-9_]*=/,
     parameter_assignment: ($) =>
       seq(
         field("target", $.parameter_reference),
@@ -352,7 +281,11 @@ module.exports = grammar({
       ),
 
     jinja_statement_inline: ($) =>
-      seq("{%", field("directive", $.jinja_directive), "%}"),
+      seq(
+        choice("{%", "{%-"),
+        field("directive", $.jinja_directive),
+        choice("%}", "-%}"),
+      ),
     jinja_directive: ($) =>
       choice(
         seq("set", $._assignable, "=", $._expression),
@@ -376,17 +309,18 @@ module.exports = grammar({
           ),
           repeat($._template_item),
         ),
-        choice(
-          "endfilter",
-          "endwith",
-          "endblock",
-          "raw",
-          "endraw",
-          "break",
-          "continue",
-        ),
+        "endfilter",
+        "endwith",
+        "endblock",
+        "raw",
+        "endraw",
+        "break",
+        "continue",
       ),
-    jinja_comment_inline: ($) => seq("{#", optional($.comment_text), "#}"),
+    jinja_comment_inline: (_) =>
+      token(
+        seq("{#", repeat(choice(/[^#\r\n]/, /#[^}\r\n]/)), optional("#"), "#}"),
+      ),
     _template_item: ($) =>
       choice(
         $.brace_expression,
@@ -419,26 +353,8 @@ module.exports = grammar({
       ),
 
     brace_expression: ($) =>
-      seq(
-        "{",
-        repeat($._newline),
-        optional(
-          seq(
-            commaSepWithNewlines1(choice($._expression, $.dict_entry), $),
-            repeat($._newline),
-          ),
-        ),
-        "}",
-      ),
-    bracket_expression: ($) =>
-      seq(
-        "[",
-        repeat($._newline),
-        optional(
-          seq(commaSepWithNewlines1($._expression, $), repeat($._newline)),
-        ),
-        "]",
-      ),
+      delimitedList($, "{", "}", choice($._expression, $.dict_entry)),
+    bracket_expression: ($) => delimitedList($, "[", "]", $._expression),
     dict_entry: ($) =>
       seq(field("key", $._expression), ":", field("value", $._expression)),
     parenthesized_expression: ($) => seq("(", $._expression, ")"),
@@ -491,26 +407,19 @@ module.exports = grammar({
         ),
       ),
     argument_list: ($) =>
-      seq(
+      delimitedList(
+        $,
         "(",
-        repeat($._newline),
-        optional(
-          seq(
-            commaSepWithNewlines1(
-              choice(
-                $.multiline_string_expression,
-                $._expression,
-                $.keyword_argument,
-              ),
-              $,
-            ),
-            optional(","),
-            repeat($._newline),
-          ),
-        ),
         ")",
+        choice(
+          $.multiline_string_expression,
+          $._expression,
+          $.keyword_argument,
+        ),
+        { trailingComma: true },
       ),
-    keyword_argument: ($) => seq($.identifier, "=", $._expression),
+    keyword_argument: ($) =>
+      prec(PREC.COMPARE + 2, seq($.identifier, "=", $._expression)),
     multiline_string_expression: ($) =>
       prec.right(
         seq(
@@ -543,56 +452,14 @@ module.exports = grammar({
         ...binaryLeft(PREC.AND, ["and", "AND", "xor", "XOR", "&&"], $),
         ...binaryLeft(
           PREC.COMPARE,
-          [
-            "==",
-            "=",
-            "!=",
-            "<>",
-            "<=",
-            ">=",
-            "<",
-            ">",
-            "eq",
-            "EQ",
-            "ne",
-            "NE",
-            "lt",
-            "LT",
-            "le",
-            "LE",
-            "gt",
-            "GT",
-            "ge",
-            "GE",
-            "in",
-            "IN",
-          ],
+          ["==", "=", "!=", "<>", "<=", ">=", "<", ">", "in", "IN", "is", "IS"],
           $,
         ),
-        prec.left(
-          PREC.COMPARE,
-          seq(
-            field("left", $._expression),
-            field("operator", $.text_comparison_operator),
-            field("right", $._expression),
-          ),
-        ),
-        ...binaryLeft(PREC.COMPARE, ["is", "IS"], $),
-        prec.left(
+        ...binaryLeft(PREC.COMPARE, [$.text_comparison_operator], $),
+        ...binaryLeft(
           PREC.COMPARE + 1,
-          seq(
-            field("left", $._expression),
-            field("operator", $.not_in_operator),
-            field("right", $._expression),
-          ),
-        ),
-        prec.left(
-          PREC.COMPARE + 1,
-          seq(
-            field("left", $._expression),
-            field("operator", $.is_not_operator),
-            field("right", $._expression),
-          ),
+          [$.not_in_operator, $.is_not_operator],
+          $,
         ),
         ...binaryLeft(PREC.CONCAT, ["^", "~"], $),
         ...binaryLeft(PREC.ADD, ["+", "-"], $),
@@ -608,13 +475,10 @@ module.exports = grammar({
       ),
 
     conditional_expression: ($) =>
-      choice(
-        prec.right(
-          PREC.CONDITIONAL,
+      prec.right(
+        PREC.CONDITIONAL,
+        choice(
           seq($._expression, "?", $._expression, ":", $._expression),
-        ),
-        prec.right(
-          PREC.CONDITIONAL,
           seq($._expression, "if", $._expression, "else", $._expression),
         ),
       ),
@@ -630,31 +494,82 @@ module.exports = grammar({
         ),
       ),
 
-    not_in_operator: (_) => token(/(?:not|NOT)[ \t]+(?:in|IN)/),
-    is_not_operator: (_) => token(/(?:is|IS)[ \t]+(?:not|NOT)/),
-    not_operator: (_) => token(prec(2, /[Nn][Oo][Tt][ \t]+/)),
+    not_in_operator: (_) =>
+      new RegExp(`${caseInsensitive("not")}[ \\t]+${caseInsensitive("in")}`),
+    is_not_operator: (_) =>
+      new RegExp(`${caseInsensitive("is")}[ \\t]+${caseInsensitive("not")}`),
+    not_operator: (_) =>
+      token(prec(2, new RegExp(`${caseInsensitive("not")}[ \\t]+`))),
     text_comparison_operator: (_) =>
-      token(/(?:[Ee][Qq]|[Nn][Ee]|[Gg][Tt]|[Gg][Ee]|[Ll][Tt]|[Ll][Ee])/),
+      caseInsensitiveWords(["eq", "ne", "gt", "ge", "lt", "le"]),
 
     parameter_reference: (_) => token(prec(8, /#+(?:\d+|<[^>\r\n]+>)/)),
-    spaced_parameter_reference: (_) => seq("#", token(/<[^>\r\n]+>/)),
+    spaced_parameter_reference: ($) => seq("#", /<[^>\r\n]+>/),
     identifier: (_) => token(prec(1, /[A-Za-z_][A-Za-z0-9_]*/)),
     number: (_) =>
-      token(
-        /[-+]?(?:(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?|0[xX][0-9A-Fa-f]+)/,
-      ),
+      /[-+]?(?:(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?|0[xX][0-9A-Fa-f]+)/,
     string: ($) => choice($.double_quoted_string, $.single_quoted_string),
     double_quoted_string: (_) =>
       token(seq('"', repeat(choice(/[^"\\\r\n]/, /\\./)), '"')),
     single_quoted_string: (_) =>
       token(seq("'", repeat(choice(/[^'\\\r\n]/, /\\./)), "'")),
-    boolean: (_) => choice("true", "false", "True", "False", "TRUE", "FALSE"),
-    null: (_) => choice("null", "none", "None", "NULL"),
+    boolean: (_) => token(prec(2, caseInsensitiveWords(["true", "false"]))),
+    null: (_) => token(prec(2, caseInsensitiveWords(["null", "none"]))),
     colon: (_) => ":",
     comma: (_) => ",",
-    bare_argument: (_) => token(prec(-2, /[^\s;(){}\[\],:=*]+/)),
+    // Same digit-run/letter boundary as extended_command, with one extra
+    // rule: a dot right after digits stays numeric (X1.Y2. splits at Y), while
+    // a dot after letters stays wordy (file.gco is one argument).
+    bare_argument: (_) =>
+      token(
+        prec(
+          -2,
+          /(?:[^\s0-9;(){}\[\],:=*]|\d+(?:\.\d*)?[^\sA-Za-z0-9.;(){}\[\],:=*])*(?:\d+(?:\.\d*)?|[^\s0-9;(){}\[\],:=*])/,
+        ),
+      ),
   },
 });
+
+// Keyword line, optional trailing comment, hard newline — the shared shape of
+// every RRF meta statement.
+function rrfLine($, keyword, ...parts) {
+  return prec.right(
+    10,
+    seq(
+      field("keyword", keyword),
+      ...parts,
+      optional($.semicolon_comment),
+      $._newline,
+    ),
+  );
+}
+
+// Newline-tolerant delimited list; trailing commas only where a dialect
+// actually allows them (call argument lists).
+function delimitedList($, open, close, item, { trailingComma = false } = {}) {
+  return seq(
+    open,
+    repeat($._newline),
+    optional(
+      seq(
+        commaSepWithNewlines1(item, $),
+        ...(trailingComma ? [optional(",")] : []),
+        repeat($._newline),
+      ),
+    ),
+    close,
+  );
+}
+
+// A single letter followed by a decimal operand, e.g. X10.5 or F-3e2.
+function letterWord(letters, precedence) {
+  return token(prec(precedence, new RegExp(`[${letters}]${DECIMAL}`)));
+}
+
+// A command code such as G1, M104.1, or T-1.
+function codeWord(letters) {
+  return token(prec(8, new RegExp(`[${letters}]${CODE_NUMBER}`)));
+}
 
 function commaSep1(rule) {
   return seq(rule, repeat(seq(",", rule)));
@@ -677,17 +592,14 @@ function binaryLeft(precedence, operators, $) {
   );
 }
 
+function caseInsensitive(word) {
+  return [...word]
+    .map(
+      (character) => `[${character.toLowerCase()}${character.toUpperCase()}]`,
+    )
+    .join("");
+}
+
 function caseInsensitiveWords(words) {
-  return new RegExp(
-    words
-      .map((word) =>
-        [...word]
-          .map(
-            (character) =>
-              `[${character.toLowerCase()}${character.toUpperCase()}]`,
-          )
-          .join(""),
-      )
-      .join("|"),
-  );
+  return new RegExp(words.map(caseInsensitive).join("|"));
 }
