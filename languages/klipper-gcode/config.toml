@@ -1,8 +1,26 @@
 name = "Klipper G-code Config"
 grammar = "practical_gcode"
 path_suffixes = ["klipper.cfg"]
-first_line_pattern = '^\s*\[(printer|include|gcode_macro|delayed_gcode)(\s|\])'
+# Zed applies this to the first line only, so it can only catch configs that
+# open with a section header; comment-headed files need manual selection or a
+# user file_types setting (see README).
+first_line_pattern = '^\s*\[(include|printer|mcu|stepper_|extruder|heater_|fan|display|board_pins|gcode_macro|delayed_gcode|virtual_sdcard|idle_timeout|bed_mesh|pause_resume|exclude_object|save_variables|respond|force_move)[A-Za-z0-9_ -]*[\s\]]'
 line_comments = ["# "]
 tab_size = 2
 hard_tabs = false
-
+brackets = [
+  { start = "{", end = "}", close = true, newline = false },
+  { start = "[", end = "]", close = true, newline = false },
+  { start = "(", end = ")", close = true, newline = false },
+  { start = "\"", end = "\"", close = true, newline = false, not_in = ["string"] },
+  { start = "'", end = "'", close = true, newline = false, not_in = ["string"] },
+]
+auto_indent_using_last_non_empty_line = false
+increase_indent_pattern = '^\s*(?:(?:if|elif|else|while)\b|\{%-?\s*(?:if|elif|else|for|macro|filter|with|block)\b[^{]*%\}\s*$)'
+decrease_indent_patterns = [
+  { pattern = '^\s*elif\b', valid_after = ["if", "elif"] },
+  { pattern = '^\s*else\b', valid_after = ["if", "elif", "while"] },
+  { pattern = '^\s*\{%-?\s*elif\b', valid_after = ["jinja_if", "jinja_elif"] },
+  { pattern = '^\s*\{%-?\s*else\s*-?%\}', valid_after = ["jinja_if", "jinja_elif", "jinja_for"] },
+  { pattern = '^\s*\{%-?\s*end(?:if|for|macro|filter|with|block)\s*-?%\}', valid_after = ["jinja_if", "jinja_elif", "jinja_for"] },
+]

@@ -4,4 +4,11 @@ path_suffixes = ["nc", "ngc", "tap", "cnc", "ncc", "din", "mpf", "spf"]
 line_comments = ["; "]
 tab_size = 2
 hard_tabs = false
-
+brackets = [
+  { start = "(", end = ")", close = true, newline = false },
+  { start = "[", end = "]", close = true, newline = false },
+  { start = "<", end = ">", close = true, newline = false, not_in = ["comment"] },
+]
+auto_indent_using_last_non_empty_line = false
+increase_indent_pattern = '^\s*[oO](?:\d+(?:\.\d+)?|<[^>]+>)\s*(?i:elseif|else|while|repeat|sub|if|do)\b'
+decrease_indent_pattern = '^\s*[oO](?:\d+(?:\.\d+)?|<[^>]+>)\s*(?i:endwhile|endrepeat|endsub|elseif|endif|else)\b'
