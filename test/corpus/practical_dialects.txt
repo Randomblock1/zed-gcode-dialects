@@ -124,6 +124,7 @@ Klipper config and Jinja macro
 [gcode_macro CLEAN_NOZZLE]
 description: Clean the nozzle
 variable_wipe_count: 2
+rename_existing = CLEAN_NOZZLE_BASE
 gcode:
   {% set count = params.COUNT|default(2)|int %}
   {% for wipe in range(count) %}
@@ -145,6 +146,9 @@ gcode:
   (klipper_option
     (option_name)
     (number))
+  (klipper_option
+    (option_name)
+    (bare_argument))
   (klipper_option
     (option_name))
   (program_line

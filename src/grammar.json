@@ -276,7 +276,7 @@
       "type": "TOKEN",
       "content": {
         "type": "PATTERN",
-        "value": "[A-Za-z_][A-Za-z0-9_]*:"
+        "value": "[A-Za-z_][A-Za-z0-9_]*(?::|[ \\t]*=)"
       }
     },
     "rrf_declaration": {
@@ -3881,12 +3881,7 @@
       "value": "[ \\t\\f]"
     }
   ],
-  "conflicts": [
-    [
-      "parenthesized_expression",
-      "parenthesized_comment"
-    ]
-  ],
+  "conflicts": [],
   "precedences": [],
   "externals": [],
   "inline": [],
