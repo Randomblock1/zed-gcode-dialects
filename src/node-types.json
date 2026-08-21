@@ -56,6 +56,10 @@
         "named": true
       },
       {
+        "type": "spaced_parameter_reference",
+        "named": true
+      },
+      {
         "type": "string",
         "named": true
       },
@@ -138,6 +142,14 @@
         "named": true
       },
       {
+        "type": "quoted_word",
+        "named": true
+      },
+      {
+        "type": "spaced_parameter_reference",
+        "named": true
+      },
+      {
         "type": "spindle_word",
         "named": true
       },
@@ -162,6 +174,10 @@
         {
           "type": "keyword_argument",
           "named": true
+        },
+        {
+          "type": "multiline_string_expression",
+          "named": true
         }
       ]
     }
@@ -181,7 +197,7 @@
         ]
       },
       "operator": {
-        "multiple": true,
+        "multiple": false,
         "required": true,
         "types": [
           {
@@ -230,6 +246,10 @@
           },
           {
             "type": "<>",
+            "named": false
+          },
+          {
+            "type": "=",
             "named": false
           },
           {
@@ -321,6 +341,10 @@
             "named": false
           },
           {
+            "type": "is_not_operator",
+            "named": true
+          },
+          {
             "type": "le",
             "named": false
           },
@@ -337,12 +361,16 @@
             "named": false
           },
           {
-            "type": "not",
-            "named": false
+            "type": "not_in_operator",
+            "named": true
           },
           {
             "type": "or",
             "named": false
+          },
+          {
+            "type": "text_comparison_operator",
+            "named": true
           },
           {
             "type": "xor",
@@ -447,6 +475,10 @@
       "multiple": true,
       "required": false,
       "types": [
+        {
+          "type": "argument_list",
+          "named": true
+        },
         {
           "type": "member_access",
           "named": true
@@ -580,6 +612,11 @@
     }
   },
   {
+    "type": "hash_comment",
+    "named": true,
+    "fields": {}
+  },
+  {
     "type": "jinja_comment_inline",
     "named": true,
     "fields": {},
@@ -653,6 +690,40 @@
     }
   },
   {
+    "type": "klipper_alias_line",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "klipper_alias",
+          "named": true
+        },
+        {
+          "type": "klipper_inline_comment",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "klipper_glyph_line",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "glyph_pixels",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "klipper_option",
     "named": true,
     "fields": {
@@ -688,15 +759,19 @@
           "named": true
         },
         {
-          "type": "hash_comment",
-          "named": true
-        },
-        {
           "type": "jinja_comment_inline",
           "named": true
         },
         {
           "type": "jinja_statement_inline",
+          "named": true
+        },
+        {
+          "type": "klipper_inline_comment",
+          "named": true
+        },
+        {
+          "type": "klipper_option_text",
           "named": true
         },
         {
@@ -763,6 +838,46 @@
     }
   },
   {
+    "type": "multiline_string_expression",
+    "named": true,
+    "fields": {
+      "operator": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "%",
+            "named": false
+          }
+        ]
+      },
+      "right": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "_expression",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "multiline_string_expression",
+          "named": true
+        },
+        {
+          "type": "string",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "named_argument",
     "named": true,
     "fields": {
@@ -778,7 +893,7 @@
       },
       "value": {
         "multiple": false,
-        "required": true,
+        "required": false,
         "types": [
           {
             "type": "_expression",
@@ -806,64 +921,8 @@
         "required": true,
         "types": [
           {
-            "type": "break",
-            "named": false
-          },
-          {
-            "type": "call",
-            "named": false
-          },
-          {
-            "type": "continue",
-            "named": false
-          },
-          {
-            "type": "do",
-            "named": false
-          },
-          {
-            "type": "else",
-            "named": false
-          },
-          {
-            "type": "elseif",
-            "named": false
-          },
-          {
-            "type": "endif",
-            "named": false
-          },
-          {
-            "type": "endrepeat",
-            "named": false
-          },
-          {
-            "type": "endsub",
-            "named": false
-          },
-          {
-            "type": "endwhile",
-            "named": false
-          },
-          {
-            "type": "if",
-            "named": false
-          },
-          {
-            "type": "repeat",
-            "named": false
-          },
-          {
-            "type": "return",
-            "named": false
-          },
-          {
-            "type": "sub",
-            "named": false
-          },
-          {
-            "type": "while",
-            "named": false
+            "type": "o_keyword",
+            "named": true
           }
         ]
       },
@@ -891,11 +950,19 @@
           "named": true
         },
         {
+          "type": "hash_comment",
+          "named": true
+        },
+        {
           "type": "number",
           "named": true
         },
         {
           "type": "parameter_reference",
+          "named": true
+        },
+        {
+          "type": "parenthesized_comment",
           "named": true
         },
         {
@@ -1005,6 +1072,10 @@
           "named": true
         },
         {
+          "type": "hash_comment",
+          "named": true
+        },
+        {
           "type": "line_number",
           "named": true
         },
@@ -1014,6 +1085,11 @@
         }
       ]
     }
+  },
+  {
+    "type": "quoted_word",
+    "named": true,
+    "fields": {}
   },
   {
     "type": "reference_expression",
@@ -1223,6 +1299,37 @@
     "fields": {}
   },
   {
+    "type": "rrf_loop_control",
+    "named": true,
+    "fields": {
+      "keyword": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "rrf_loop_control_keyword",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "semicolon_comment",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "rrf_loop_control_keyword",
+    "named": true,
+    "fields": {}
+  },
+  {
     "type": "rrf_output",
     "named": true,
     "fields": {
@@ -1239,7 +1346,7 @@
     },
     "children": {
       "multiple": true,
-      "required": true,
+      "required": false,
       "types": [
         {
           "type": "_expression",
@@ -1299,6 +1406,14 @@
           "named": true
         },
         {
+          "type": "klipper_alias_line",
+          "named": true
+        },
+        {
+          "type": "klipper_glyph_line",
+          "named": true
+        },
+        {
           "type": "klipper_option",
           "named": true
         },
@@ -1335,6 +1450,10 @@
           "named": true
         },
         {
+          "type": "rrf_loop_control",
+          "named": true
+        },
+        {
           "type": "rrf_output",
           "named": true
         },
@@ -1344,6 +1463,11 @@
         }
       ]
     }
+  },
+  {
+    "type": "spaced_parameter_reference",
+    "named": true,
+    "fields": {}
   },
   {
     "type": "string",
@@ -1434,12 +1558,8 @@
             "named": false
           },
           {
-            "type": "NOT",
-            "named": false
-          },
-          {
-            "type": "not",
-            "named": false
+            "type": "not_operator",
+            "named": true
           }
         ]
       }
@@ -1598,10 +1718,6 @@
     "named": false
   },
   {
-    "type": "NOT",
-    "named": false
-  },
-  {
     "type": "NULL",
     "named": false
   },
@@ -1674,10 +1790,6 @@
     "named": false
   },
   {
-    "type": "call",
-    "named": false
-  },
-  {
     "type": "checksum",
     "named": true
   },
@@ -1710,10 +1822,6 @@
     "named": false
   },
   {
-    "type": "elseif",
-    "named": false
-  },
-  {
     "type": "endblock",
     "named": false
   },
@@ -1735,18 +1843,6 @@
   },
   {
     "type": "endraw",
-    "named": false
-  },
-  {
-    "type": "endrepeat",
-    "named": false
-  },
-  {
-    "type": "endsub",
-    "named": false
-  },
-  {
-    "type": "endwhile",
     "named": false
   },
   {
@@ -1798,12 +1894,12 @@
     "named": false
   },
   {
-    "type": "gt",
-    "named": false
+    "type": "glyph_pixels",
+    "named": true
   },
   {
-    "type": "hash_comment",
-    "named": true
+    "type": "gt",
+    "named": false
   },
   {
     "type": "identifier",
@@ -1828,6 +1924,22 @@
   {
     "type": "is",
     "named": false
+  },
+  {
+    "type": "is_not_operator",
+    "named": true
+  },
+  {
+    "type": "klipper_alias",
+    "named": true
+  },
+  {
+    "type": "klipper_inline_comment",
+    "named": true
+  },
+  {
+    "type": "klipper_option_text",
+    "named": true
   },
   {
     "type": "le",
@@ -1862,8 +1974,12 @@
     "named": false
   },
   {
-    "type": "not",
-    "named": false
+    "type": "not_in_operator",
+    "named": true
+  },
+  {
+    "type": "not_operator",
+    "named": true
   },
   {
     "type": "null",
@@ -1871,6 +1987,10 @@
   },
   {
     "type": "number",
+    "named": true
+  },
+  {
+    "type": "o_keyword",
     "named": true
   },
   {
@@ -1906,14 +2026,6 @@
     "named": false
   },
   {
-    "type": "repeat",
-    "named": false
-  },
-  {
-    "type": "return",
-    "named": false
-  },
-  {
     "type": "section_name",
     "named": true
   },
@@ -1938,8 +2050,8 @@
     "named": true
   },
   {
-    "type": "sub",
-    "named": false
+    "type": "text_comparison_operator",
+    "named": true
   },
   {
     "type": "tool_code",

@@ -6,7 +6,7 @@
       "camelcase": "PracticalGcode",
       "title": "Practical G-code",
       "scope": "source.practical-gcode",
-      "file-types": ["gcode", "gco", "gc", "g", "rrf", "nc", "ngc", "tap", "cnc"],
+      "file-types": ["gcode", "gco", "gc", "g", "rrf", "cfg", "nc", "ngc", "tap", "cnc"],
       "injection-regex": "^(practical[-_ ]?gcode|gcode|rrf|klipper|cnc)$",
       "class-name": "TreeSitterPracticalGcode"
     }
@@ -25,4 +25,3 @@
     "node": true
   }
 }
-

@@ -6,7 +6,7 @@
   keyword: (rrf_declaration_keyword) @context
   name: (identifier) @name) @item
 
-(o_statement
+((o_statement
   label: (o_label) @name
-  keyword: "sub" @context) @item
-
+  keyword: (o_keyword) @context) @item
+  (#match? @context "^[sS][uU][bB]$"))

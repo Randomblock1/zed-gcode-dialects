@@ -10,6 +10,8 @@ if !sensors.endstops[global.ENDSTOP_AXIS].triggered
   abort global.LAST_ERROR
 else
   echo "measurement ok"
+while iterations < 10
+  continue
 set global.WIDTH = abs(move.axes[global.ENDSTOP_AXIS].machinePosition - var.nearEdge)
 
 ---
@@ -91,6 +93,13 @@ set global.WIDTH = abs(move.axes[global.ENDSTOP_AXIS].machinePosition - var.near
     (rrf_output_keyword)
     (string
       (double_quoted_string)))
+  (rrf_control
+    (rrf_control_keyword)
+    (binary_expression
+      (identifier)
+      (number)))
+  (rrf_loop_control
+    (rrf_loop_control_keyword))
   (rrf_assignment
     (rrf_set_keyword)
     (reference_expression
@@ -140,15 +149,13 @@ gcode:
     (section_name))
   (klipper_option
     (option_name)
-    (bare_argument)
-    (bare_argument)
-    (bare_argument))
+    (klipper_option_text))
   (klipper_option
     (option_name)
-    (number))
+    (klipper_option_text))
   (klipper_option
     (option_name)
-    (bare_argument))
+    (klipper_option_text))
   (klipper_option
     (option_name))
   (program_line
@@ -235,9 +242,7 @@ M563 P1 D0:1 H1:2 F0:1
     (bare_argument))
   (program_line
     (m_code)
-    (bare_argument)
-    (colon)
-    (bare_argument))
+    (quoted_word))
   (program_line
     (m_code)
     (parameter_word)
@@ -295,7 +300,8 @@ M30
       (parameter_reference_word))
     (parenthesized_comment))
   (o_statement
-    (o_label))
+    (o_label)
+    (o_keyword))
   (program_line
     (parameter_word)
     (bare_argument)
@@ -312,7 +318,8 @@ M30
     (parameter_word)
     (bare_argument))
   (o_statement
-    (o_label))
+    (o_label)
+    (o_keyword))
   (program_line
     (m_code))
   (percent_line))

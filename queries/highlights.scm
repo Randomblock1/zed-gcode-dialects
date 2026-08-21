@@ -2,6 +2,7 @@
 [
   (semicolon_comment)
   (hash_comment)
+  (klipper_inline_comment)
   (parenthesized_comment)
   (jinja_comment_inline)
 ] @comment
@@ -12,12 +13,14 @@
 (tool_code) @type.builtin
 (extended_command) @function
 (o_label) @label
+(o_keyword) @keyword
 
 [
   (rrf_declaration_keyword)
   (rrf_set_keyword)
   (rrf_control_keyword)
   (rrf_else_keyword)
+  (rrf_loop_control_keyword)
   (rrf_output_keyword)
 ] @keyword
 
@@ -38,7 +41,9 @@
 (expression_word) @variable.special
 (argument_name) @property
 (parameter_reference) @variable.special
+(spaced_parameter_reference) @variable.special
 (parameter_reference_word) @variable.special
+(quoted_word) @string
 
 ; Expressions
 (number) @number
@@ -55,14 +60,18 @@
 (call_expression function: (identifier) @function)
 (call_expression function: (reference_expression) @function)
 (filter_expression filter: (identifier) @function)
+[
+  (not_in_operator)
+  (is_not_operator)
+  (text_comparison_operator)
+  (not_operator)
+] @operator
 
 [
   "="
   "!"
   "-"
   "+"
-  "not"
-  "NOT"
   "#"
   "or"
   "OR"
