@@ -1,6 +1,6 @@
-# G-code for Zed
+# G-code Dialects
 
-A Zed extension for the G-code people edit on real printers and CNC machines, backed by the [tree-sitter-gcode](https://github.com/Randomblock1/tree-sitter-gcode) grammar. It is independently authored, not a fork of `ChocolateNao/zed-gcode`.
+A Zed extension for the G-code people edit on real printers and CNC machines, backed by the [tree-sitter-gcode-dialects](https://github.com/Randomblock1/tree-sitter-gcode-dialects) grammar. It is independently authored, not a fork of `ChocolateNao/zed-gcode`.
 
 One extension supplies four selectable language modes backed by one tolerant grammar:
 
@@ -17,7 +17,7 @@ Klipper installations commonly use `printer.cfg`, which is too broad a suffix to
 
 ## Local development install
 
-Zed builds the grammar from the `repository`/`rev` pin in `extension.toml`, never from a working tree. To develop against a local grammar checkout, clone [tree-sitter-gcode](https://github.com/Randomblock1/tree-sitter-gcode) as a sibling of this repository (or set `GCODE_GRAMMAR_DIR` to its path), then:
+Zed builds the grammar from the `repository`/`rev` pin in `extension.toml`, never from a working tree. To develop against a local grammar checkout, clone [tree-sitter-gcode-dialects](https://github.com/Randomblock1/tree-sitter-gcode-dialects) as a sibling of this repository (or set `GCODE_GRAMMAR_DIR` to its path), then:
 
 ```sh
 node scripts/use-local-grammar.mjs
@@ -40,4 +40,4 @@ node scripts/sync-zed-queries.mjs
 1. Push the grammar repository and make it public — the extension registry's CI (and any other user's dev build) fetches `rev` anonymously, so a private grammar repository will fail to build.
 2. Run `node scripts/use-release-grammar.mjs` against the grammar checkout being released.
 3. Install as a Zed dev extension and inspect the grammar repository's `examples/` files in each language mode.
-4. Submit this repository as a submodule under `extensions/gcode` in `zed-industries/extensions`. Note: the registry already lists a `gcode` extension (`ChocolateNao/zed-gcode`); if the id collides, pick a distinct id in `extension.toml` at submission time.
+4. Submit this repository as a submodule under `extensions/gcode-dialects` in `zed-industries/extensions`. The registry's existing `gcode` extension (`ChocolateNao/zed-gcode`) is a separate entry; this one is `gcode-dialects`.

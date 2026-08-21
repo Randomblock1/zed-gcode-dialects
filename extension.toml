@@ -1,11 +1,11 @@
-id = "gcode"
-name = "G-code"
+id = "gcode-dialects"
+name = "G-code Dialects"
 version = "0.1.0"
 schema_version = 1
 authors = ["Benjamin Gonzalez"]
 description = "High-quality syntax support for Marlin/RepRap, RepRapFirmware, Klipper macros, and CNC G-code."
-repository = "https://github.com/Randomblock1/zed-gcode"
+repository = "https://github.com/Randomblock1/zed-gcode-dialects"
 
 [grammars.gcode]
-repository = "https://github.com/Randomblock1/tree-sitter-gcode"
-rev = "8099c9e27b81e497579eab90937449e94ad2bbdd"
+repository = "https://github.com/Randomblock1/tree-sitter-gcode-dialects"
+rev = "c6e409b534f459f8d93547614f059b2581954ea2"
