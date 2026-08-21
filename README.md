@@ -6,7 +6,7 @@ One extension supplies four selectable language modes backed by one tolerant gra
 
 | Language mode | Primary coverage | Default suffixes |
 | --- | --- | --- |
-| 3D Printer G-code | Marlin, RepRap-style firmware, slicer output, common vendor commands | `.gcode`, `.gco`, `.gc` |
+| 3D Printer G-code | Marlin, RepRap-style firmware, slicer output, common vendor commands | `.gcode`, `.gco`, `.gc`, `.bfb` |
 | RepRapFirmware G-code | RRF meta commands, indentation, brace expressions, variables, object-model paths, arrays, strings | `.g`, `.rrf`, `.rrfg` |
 | Klipper G-code Config | Klipper sections/options, extended commands, macro parameters, Jinja statements and expressions | `.klipper.cfg`; other Klipper files usually need manual selection (see below) |
 | CNC G-code | RS274/NGC and common LinuxCNC/Fanuc constructs, parameters, bracket expressions, O-code flow control | `.nc`, `.ngc`, `.tap`, `.cnc`, and related suffixes |
