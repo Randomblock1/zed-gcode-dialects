@@ -8,4 +8,4 @@ repository = "https://github.com/Randomblock1/zed-gcode-dialects"
 
 [grammars.gcode]
 repository = "https://github.com/Randomblock1/tree-sitter-gcode-dialects"
-rev = "c6e409b534f459f8d93547614f059b2581954ea2"
+rev = "90806a6d9106c82776df517e1be973b78d82d2a0"
